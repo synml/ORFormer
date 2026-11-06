@@ -201,9 +201,8 @@ class ORAttention(nn.Module):
         # set diagonal to 0
         N = ORdots.shape[-1]
         mask = torch.eye(N, device=ORdots.device).bool()
-        ORdots[:, :, mask] = 0
-        # for i in range(ORdots.shape[2]):
-        #     ORdots[:, :, i, i] = 0
+        # masked_fill: in-place 대입은 ONNX에서 ScatterND가 되어 ORT 경고가 난다.
+        ORdots = ORdots.masked_fill(mask, 0)
 
         if alpha is not None:
             repeat_alpha = (
