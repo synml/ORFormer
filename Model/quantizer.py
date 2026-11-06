@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+from torch import nn
 
 
 class VectorQuantizer(nn.Module):
@@ -13,7 +13,7 @@ class VectorQuantizer(nn.Module):
     """
 
     def __init__(self, n_e, e_dim, c_dim, beta):
-        super(VectorQuantizer, self).__init__()
+        super().__init__()
         self.n_e = n_e
         self.e_dim = e_dim
         self.c_dim = c_dim

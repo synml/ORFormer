@@ -1,6 +1,7 @@
-import torch
-import torch.nn as nn
 import numpy as np
+import torch
+from torch import nn
+
 from .residual import ResidualStack
 
 
@@ -18,7 +19,7 @@ class Decoder(nn.Module):
     """
 
     def __init__(self, in_dim, h_dim, n_res_layers, res_h_dim, ouput_dim):
-        super(Decoder, self).__init__()
+        super().__init__()
         kernel = 4
         stride = 2
 

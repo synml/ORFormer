@@ -1,31 +1,22 @@
 import os
 import os.path
 import sys
-import os
 
 os.chdir(sys.path[0])
 
 import argparse
 
-from Config import cfg
-
-from Dataloader import WFLW_heatmap_Dataset, W300_heatmap_Dataset, COFW_heatmap_Dataset
-
+import cv2
 import numpy as np
-
 import torch
-import torchvision.transforms as transforms
-
+import torchinfo
+from torchvision import transforms
 from tqdm import tqdm
 
-
-from Model.VQVAE import VQVAE
-
+from Config import cfg
+from Dataloader import COFW_heatmap_Dataset, W300_heatmap_Dataset, WFLW_heatmap_Dataset
 from Model.simple_vit import ORFormer
-
-import cv2
-
-import torchinfo
+from Model.VQVAE import VQVAE
 
 
 def parse_args():
@@ -212,7 +203,7 @@ def main_function():
             resized_image,
         ) in enumerate(tqdm(valid_loader)):
             gt_heatmap = meta["Edge_Heatmaps"].cuda()
-            _, x_hat, _, _, _, _, _, _, attention_weights = vqvae(
+            _, x_hat, _, _, _, _, _, _, _attention_weights = vqvae(
                 resized_occluded_input.to(device)
             )
 

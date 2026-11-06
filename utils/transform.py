@@ -7,9 +7,7 @@ def get_3rd_point(a, b):
     return b + np.array([-direct[1], direct[0]], dtype=np.float32)
 
 
-def get_affine_transform(
-    center, scale, rot, output_size, shift=np.array([0, 0], dtype=np.float32), inv=0
-):
+def get_affine_transform(center, scale, rot, output_size, shift=(0.0, 0.0), inv=0):
     if not isinstance(scale, np.ndarray) and not isinstance(scale, list):
         scale = np.array([scale, scale])
 

@@ -1,10 +1,10 @@
 import torch
-import torch.nn as nn
+from torch import nn
 
 
 class AddCoordsTh(nn.Module):
     def __init__(self, x_dim, y_dim, with_r=False, with_boundary=False):
-        super(AddCoordsTh, self).__init__()
+        super().__init__()
         self.x_dim = x_dim
         self.y_dim = y_dim
         self.with_r = with_r
@@ -50,7 +50,7 @@ class AddCoordsTh(nn.Module):
         xx_channel = xx_channel.repeat(batch_size_tensor, 1, 1, 1)
         yy_channel = yy_channel.repeat(batch_size_tensor, 1, 1, 1)
 
-        if self.with_boundary and type(heatmap) != type(None):
+        if self.with_boundary and (heatmap is not None):
             boundary_channel = torch.clamp(heatmap[:, -1:, :, :], 0.0, 1.0)
 
             zero_tensor = torch.zeros_like(xx_channel).to(xx_channel)
@@ -67,7 +67,7 @@ class AddCoordsTh(nn.Module):
             rr = rr / torch.max(rr)
             ret = torch.cat([ret, rr], dim=1)
 
-        if self.with_boundary and type(heatmap) != type(None):
+        if self.with_boundary and (heatmap is not None):
             ret = torch.cat([ret, xx_boundary_channel, yy_boundary_channel], dim=1)
         return ret
 
@@ -89,7 +89,7 @@ class CoordConvTh(nn.Module):
         *args,
         **kwargs,
     ):
-        super(CoordConvTh, self).__init__()
+        super().__init__()
         self.addcoords = AddCoordsTh(
             x_dim=x_dim, y_dim=y_dim, with_r=with_r, with_boundary=with_boundary
         )
@@ -98,9 +98,7 @@ class CoordConvTh(nn.Module):
             in_channels += 1
         if with_boundary and not first_one:
             in_channels += 2
-        self.conv = nn.Conv2d(
-            in_channels=in_channels, out_channels=out_channels, *args, **kwargs
-        )
+        self.conv = nn.Conv2d(in_channels, out_channels, *args, **kwargs)
         self.relu = nn.ReLU() if relu else None
         self.bn = nn.BatchNorm2d(out_channels) if bn else None
 

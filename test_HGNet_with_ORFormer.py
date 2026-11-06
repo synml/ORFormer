@@ -1,7 +1,7 @@
 import os
 import os.path
 import sys
-import os
+
 import torch
 
 os.chdir(sys.path[0])
@@ -9,35 +9,25 @@ os.chdir(sys.path[0])
 import argparse
 
 from Config import cfg
-
 from Dataloader import (
-    WFLW_heatmap_Dataset,
-    W300_heatmap_Dataset,
     COFW_heatmap_Dataset,
+    W300_heatmap_Dataset,
+    WFLW_heatmap_Dataset,
     denorm_points,
 )
 
 torch.cuda.empty_cache()
+import cv2
 import numpy as np
-
-import torchvision.transforms as transforms
-
-
+import torchinfo
 from PIL import ImageDraw
-
+from scipy.integrate import simpson
+from torchvision import transforms
 from tqdm import tqdm
 
-from Model.StackedHGNet import IntergrationStackedHGNet
-
-from Model.VQVAE import VQVAE
-
 from Model.simple_vit import ORFormer
-
-import cv2
-
-from scipy.integrate import simpson
-
-import torchinfo
+from Model.StackedHGNet import IntergrationStackedHGNet
+from Model.VQVAE import VQVAE
 
 
 def parse_args():
@@ -283,7 +273,6 @@ def main_function():
 
     error_list = []
     if args.dataset == "WFLW":
-        baseline_error_list = []
         non_error_list = []
         pose_error_list = []
         expression_error_list = []
@@ -309,7 +298,7 @@ def main_function():
             _, reference_heatmaps, _, _, _, _, _, _, _ = vqvae_model(
                 resized_input.to(device)
             )
-            y, landmarks = model(
+            _y, landmarks = model(
                 input.to(device), reference_heatmaps=reference_heatmaps
             )
             landmarks = denorm_points(landmarks, 64, 64)[0].cpu().numpy()

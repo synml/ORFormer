@@ -13,7 +13,7 @@ import argparse
 import numpy as np
 import onnxruntime
 import torch
-import torch.nn as nn
+from torch import nn
 
 from Config import cfg
 from Dataloader import denorm_points

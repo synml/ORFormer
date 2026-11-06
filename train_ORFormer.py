@@ -1,39 +1,29 @@
 import os
 import os.path
-from os import path
 import sys
-import os
+from os import path
 
 os.chdir(sys.path[0])
 
 import argparse
 
-from Config import cfg
-
-from Dataloader import WFLW_heatmap_Dataset, W300_heatmap_Dataset, COFW_heatmap_Dataset
-
-import torch
-
 import numpy as np
-
-import torchvision.transforms as transforms
-
+import scipy.integrate
+import torch
+import wandb
 from torch.nn import CrossEntropyLoss
-
+from torchvision import transforms
 from tqdm import tqdm
 
-import wandb
+from Config import cfg
+from Dataloader import COFW_heatmap_Dataset, W300_heatmap_Dataset, WFLW_heatmap_Dataset
 
-import scipy.integrate
-
-setattr(
-    scipy.integrate, "simps", scipy.integrate.simpson
-)  # shortcut: torchlm 0.1.6.10 (unmaintained) imports simps, removed in scipy 1.14; drop when torchlm fixes it
+# shortcut: torchlm 0.1.6.10 (unmaintained) imports simps, removed in scipy 1.14; drop when torchlm fixes it
+scipy.integrate.simps = scipy.integrate.simpson  # pyright: ignore[reportAttributeAccessIssue]
 import torchlm
 
-from Model.VQVAE import VQVAE
-
 from Model.simple_vit import ORFormer
+from Model.VQVAE import VQVAE
 
 
 def parse_args():
@@ -318,7 +308,7 @@ def main_function():
     criterion = CrossEntropyLoss(reduction="sum")
     best_heatmap_loss = 10000
     for epoch in range(args.epoch):
-        print("Epoch: %d" % (epoch + 1))
+        print(f"Epoch: {epoch + 1}")
         # train
         model.train()
         train_heatmap_loss = 0

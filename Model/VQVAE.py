@@ -1,9 +1,11 @@
+from os import path
+
 import torch
-import torch.nn as nn
+from torch import nn
+
+from .decoder import Decoder
 from .encoder import Encoder
 from .quantizer import VectorQuantizer
-from .decoder import Decoder
-from os import path
 
 
 class VQVAE(nn.Module):
@@ -20,7 +22,7 @@ class VQVAE(nn.Module):
         save_img_embedding_map=False,
         vit=None,
     ):
-        super(VQVAE, self).__init__()
+        super().__init__()
         # encode image into continuous latent space
         self.encoder = Encoder(3, h_dim, n_res_layers, res_h_dim)
         self.pre_quantization_conv = nn.Conv2d(

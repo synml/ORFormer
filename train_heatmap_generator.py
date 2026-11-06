@@ -1,32 +1,24 @@
 import os
 import os.path
-from os import path
 import sys
-import os
+from os import path
 
 os.chdir(sys.path[0])
 
 import argparse
 
-from Config import cfg
-
-from Dataloader import WFLW_heatmap_Dataset, W300_heatmap_Dataset, COFW_heatmap_Dataset
-
-import torch
-
 import numpy as np
-
-import torchvision.transforms as transforms
-
+import scipy.integrate
+import torch
+import wandb
+from torchvision import transforms
 from tqdm import tqdm
 
-import wandb
+from Config import cfg
+from Dataloader import COFW_heatmap_Dataset, W300_heatmap_Dataset, WFLW_heatmap_Dataset
 
-import scipy.integrate
-
-setattr(
-    scipy.integrate, "simps", scipy.integrate.simpson
-)  # shortcut: torchlm 0.1.6.10 (unmaintained) imports simps, removed in scipy 1.14; drop when torchlm fixes it
+# shortcut: torchlm 0.1.6.10 (unmaintained) imports simps, removed in scipy 1.14; drop when torchlm fixes it
+scipy.integrate.simps = scipy.integrate.simpson  # pyright: ignore[reportAttributeAccessIssue]
 import torchlm
 
 from Model.VQVAE import VQVAE
@@ -223,7 +215,7 @@ def main_function():
 
     best_heatmap_loss = 10000
     for epoch in range(args.epoch):
-        print("Epoch: %d" % (epoch + 1))
+        print(f"Epoch: {epoch + 1}")
         # train
         train_emb_loss = 0
         train_heatmap_loss = 0
@@ -237,9 +229,7 @@ def main_function():
             resized_image,
         ) in enumerate(tqdm(train_loader)):
             optimizer.zero_grad()
-            embedding_loss, x_hat, perplexity, _, _, _, _, _, _ = model(
-                resized_input.to(device)
-            )
+            embedding_loss, x_hat, _, _, _, _, _, _, _ = model(resized_input.to(device))
             gt_heatmap = meta["Edge_Heatmaps"].cuda()
             heatmap_loss = torch.mean((x_hat - gt_heatmap) ** 2, axis=1).sum()
             loss = heatmap_loss + embedding_loss * args.alpha
@@ -267,7 +257,7 @@ def main_function():
                     image,
                     resized_image,
                 ) in enumerate(tqdm(valid_loader)):
-                    embedding_loss, x_hat, perplexity, _, _, _, _, _, _ = model(
+                    embedding_loss, x_hat, _, _, _, _, _, _, _ = model(
                         resized_input.to(device)
                     )
                     valid_emb_loss += embedding_loss.cpu()

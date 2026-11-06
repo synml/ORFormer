@@ -6,10 +6,8 @@ def calculate_scale(bbox, scale_Factor, size):
     width = bbox[2]
     height = bbox[3]
 
-    if width > height:
-        height = width
-    if height > width:
-        width = height
+    height = max(height, width)
+    width = max(width, height)
 
     scale = np.array([width / float(size), height / float(size)], dtype=float)
     scale = scale_Factor * scale
@@ -37,7 +35,7 @@ def get_transforms(
     scale_factor,
     rotation_factor,
     output_size,
-    shift_factor=np.array([0, 0], dtype=np.float32),
+    shift_factor=(0.0, 0.0),
     inv=False,
 ):
 

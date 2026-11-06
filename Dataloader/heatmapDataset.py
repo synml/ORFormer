@@ -1,16 +1,17 @@
-import cv2, copy, logging, os
+import copy
+import csv
+import json
+import logging
+import os
+
+import cv2
 import numpy as np
-
-import utils
-
-from torch.utils.data import Dataset
 import torch
 import torch.nn.functional as F
 from scipy import interpolate
-import csv
+from torch.utils.data import Dataset
 
-
-import json
+import utils
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +139,7 @@ def fit_curve(lmks, is_closed=False, density=5):
         # origin_indices = np.arange(0, curve_lmks.shape[0], density)
 
         return curve_lmks
-    except:
+    except (ValueError, TypeError):  # splprep fails on too few or degenerate points
         return lmks
 
 
@@ -577,18 +578,17 @@ class W300_heatmap_Dataset(Dataset):
             elif Img_shape[2] == 1:
                 Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2RGB)
 
-        if self.mirror:
-            if "mirror" in Img_path:
-                width = Img.shape[1] - 1
-                temp_box = [width - BBox[2] - BBox[0], BBox[1], BBox[2], BBox[3]]
-                for xy in Points:
-                    xy[0] = width - xy[0]
-                Points_flip = Points.copy()
-                for q, p in self.flip_mapping:
-                    Points_flip[p] = Points[q]
-                    Points_flip[q] = Points[p]
-                Points = Points_flip
-                BBox = temp_box
+        if self.mirror and "mirror" in Img_path:
+            width = Img.shape[1] - 1
+            temp_box = [width - BBox[2] - BBox[0], BBox[1], BBox[2], BBox[3]]
+            for xy in Points:
+                xy[0] = width - xy[0]
+            Points_flip = Points.copy()
+            for q, p in self.flip_mapping:
+                Points_flip[p] = Points[q]
+                Points_flip[q] = Points[p]
+            Points = Points_flip
+            BBox = temp_box
 
         Annotated_Points = Points.copy()
 
@@ -699,8 +699,8 @@ class COFW_heatmap_Dataset(Dataset):
 
     def get_file_information(self):
         Data_base = []
-        f = open(self.annotation_file, "r")
-        data = json.loads(f.read())
+        with open(self.annotation_file) as f:
+            data = json.load(f)
         for idx in range(len(data["images"])):
             assert data["images"][idx]["id"] == data["annotations"][idx]["image_id"]
             temp_name = os.path.join(
@@ -812,18 +812,17 @@ class COFW_heatmap_Dataset(Dataset):
             elif Img_shape[2] == 1:
                 Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2RGB)
 
-        if self.mirror:
-            if "mirror" in Img_path:
-                width = Img.shape[1] - 1
-                temp_box = [width - BBox[2] - BBox[0], BBox[1], BBox[2], BBox[3]]
-                for xy in Points:
-                    xy[0] = width - xy[0]
-                Points_flip = Points.copy()
-                for q, p in self.flip_mapping:
-                    Points_flip[p] = Points[q]
-                    Points_flip[q] = Points[p]
-                Points = Points_flip
-                BBox = temp_box
+        if self.mirror and "mirror" in Img_path:
+            width = Img.shape[1] - 1
+            temp_box = [width - BBox[2] - BBox[0], BBox[1], BBox[2], BBox[3]]
+            for xy in Points:
+                xy[0] = width - xy[0]
+            Points_flip = Points.copy()
+            for q, p in self.flip_mapping:
+                Points_flip[p] = Points[q]
+                Points_flip[q] = Points[p]
+            Points = Points_flip
+            BBox = temp_box
 
         Annotated_Points = Points.copy()
 

@@ -1,9 +1,9 @@
-import torch
-from torch import nn
+from os import path
 
+import torch
 from einops import rearrange
 from einops.layers.torch import Rearrange
-from os import path
+from torch import nn
 
 # helpers
 
@@ -58,7 +58,7 @@ class Attention(nn.Module):
         x = self.norm(x)
 
         qkv = self.to_qkv(x).chunk(3, dim=-1)
-        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> b h n d", h=self.heads), qkv)
+        q, k, v = (rearrange(t, "b n (h d) -> b h n d", h=self.heads) for t in qkv)
 
         dots = torch.matmul(q, k.transpose(-1, -2)) * self.scale
 
@@ -179,7 +179,7 @@ class ORAttention(nn.Module):
         x = self.norm(x)
 
         qkv = self.to_qkv(x).chunk(3, dim=-1)
-        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> b h n d", h=self.heads), qkv)
+        q, k, v = (rearrange(t, "b n (h d) -> b h n d", h=self.heads) for t in qkv)
 
         dots = torch.matmul(q, k.transpose(-1, -2)) * self.scale
 
@@ -199,7 +199,7 @@ class ORAttention(nn.Module):
         ORdots = torch.matmul(ORq, k.transpose(-1, -2)) * self.scale
 
         # set diagonal to 0
-        B, H, N, N = ORdots.shape
+        N = ORdots.shape[-1]
         mask = torch.eye(N, device=ORdots.device).bool()
         ORdots[:, :, mask] = 0
         # for i in range(ORdots.shape[2]):

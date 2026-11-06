@@ -1,12 +1,12 @@
-import numpy as np
+from os import path
 
+import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 
 from .Core.blurpool import BlurPool
 from .Core.coord_conv import CoordConvTh
-from os import path
 
 
 def _make_grid(h, w):
@@ -27,7 +27,7 @@ def get_coords_from_heatmap(heatmap):
     - coords: batch x npoints x 2 (x,y), [-1, +1]
     - radius_sq: batch x npoints
     """
-    batch, npoints, h, w = heatmap.shape
+    _batch, _npoints, h, w = heatmap.shape
 
     yy, xx = _make_grid(h, w)
     yy = yy.view(1, 1, h, w).to(heatmap)
@@ -87,7 +87,7 @@ class ConvBlock(nn.Module):
     def __init__(
         self, inp_dim, out_dim, kernel_size=3, stride=1, bn=False, relu=True, groups=1
     ):
-        super(ConvBlock, self).__init__()
+        super().__init__()
         self.inp_dim = inp_dim
         self.conv = nn.Conv2d(
             inp_dim,
@@ -116,7 +116,7 @@ class ConvBlock(nn.Module):
 
 class MultiViewBlock(nn.Module):
     def __init__(self, inp_dim, out_dim, groups=1):
-        super(MultiViewBlock, self).__init__()
+        super().__init__()
 
         assert out_dim % 4 == 0
         dim1 = out_dim // 2
@@ -164,7 +164,7 @@ class MultiViewBlock(nn.Module):
 
 class ResBlock(nn.Module):
     def __init__(self, inp_dim, out_dim, mid_dim=None):
-        super(ResBlock, self).__init__()
+        super().__init__()
         if mid_dim is None:
             mid_dim = out_dim // 2
         self.relu = nn.ReLU()
@@ -212,7 +212,7 @@ class Hourglass(nn.Module):
         x_dim=64,
         y_dim=64,
     ):
-        super(Hourglass, self).__init__()
+        super().__init__()
         nf = f + increase
 
         if use_multiview:
@@ -288,7 +288,7 @@ class E2HTransform(nn.Module):
 
         e2h_matrix = np.zeros([num_points, num_edges])
         for edge_id, isclosed_indices in enumerate(edge_info):
-            is_closed, indices = isclosed_indices
+            _is_closed, indices = isclosed_indices
             for point_id in indices:
                 e2h_matrix[point_id, edge_id] = 1
         e2h_matrix = torch.from_numpy(e2h_matrix).float()
@@ -325,7 +325,7 @@ class IntergrationStackedHGNet(nn.Module):
         pool_type="origin",
         use_multiview=False,
     ):
-        super(IntergrationStackedHGNet, self).__init__()
+        super().__init__()
         self.nstack = nstack
         self.add_coord = add_coord
         self.pool_type = pool_type

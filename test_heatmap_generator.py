@@ -1,30 +1,21 @@
 import os
 import os.path
 import sys
-import os
 
 os.chdir(sys.path[0])
 
 import argparse
 
-from Config import cfg
-
-from Dataloader import WFLW_heatmap_Dataset, W300_heatmap_Dataset, COFW_heatmap_Dataset
-
+import cv2
 import numpy as np
-
 import torch
-import torchvision.transforms as transforms
-
+import torchinfo
+from torchvision import transforms
 from tqdm import tqdm
 
-
+from Config import cfg
+from Dataloader import COFW_heatmap_Dataset, W300_heatmap_Dataset, WFLW_heatmap_Dataset
 from Model.VQVAE import VQVAE
-
-
-import cv2
-
-import torchinfo
 
 
 def parse_args():

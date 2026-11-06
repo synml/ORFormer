@@ -55,6 +55,10 @@ venvPath = "."
 venv = ".venv"
 exclude = ["Dataset", "weights", "**/__pycache__", "**/.*"]
 
+[tool.ruff.lint]
+# 원본 저장소의 대문자 모듈명(Config, Model, VQVAE 등)은 import 경로라 유지한다.
+ignore = ["N999"]
+
 [tool.ruff.format]
 docstring-code-format = true
 

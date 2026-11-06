@@ -1,49 +1,42 @@
-import sys
 import os
+import sys
 
 os.chdir(sys.path[0])
 
 import argparse
 
-from Config import cfg
-
-from Dataloader import WFLW_heatmap_Dataset, W300_heatmap_Dataset, COFW_heatmap_Dataset
-
-from Dataloader import denorm_points
-
 import torch
+
+from Config import cfg
+from Dataloader import (
+    COFW_heatmap_Dataset,
+    W300_heatmap_Dataset,
+    WFLW_heatmap_Dataset,
+    denorm_points,
+)
 
 torch.cuda.empty_cache()
 
 import numpy as np
-
-import torchvision.transforms as transforms
-
-import torch.nn as nn
-
+import scipy.integrate
+import wandb
 from PIL import ImageDraw
-
+from torch import nn
+from torchvision import transforms
 from tqdm import tqdm
 
-import wandb
-
-import scipy.integrate
-
-setattr(
-    scipy.integrate, "simps", scipy.integrate.simpson
-)  # shortcut: torchlm 0.1.6.10 (unmaintained) imports simps, removed in scipy 1.14; drop when torchlm fixes it
+# shortcut: torchlm 0.1.6.10 (unmaintained) imports simps, removed in scipy 1.14; drop when torchlm fixes it
+scipy.integrate.simps = scipy.integrate.simpson  # pyright: ignore[reportAttributeAccessIssue]
 import torchlm
 
-from Model.StackedHGNet import IntergrationStackedHGNet
-
-from Model.VQVAE import VQVAE
-
 from Model.simple_vit import ORFormer
+from Model.StackedHGNet import IntergrationStackedHGNet
+from Model.VQVAE import VQVAE
 
 
 class NME_loss(nn.Module):
     def __init__(self, name):
-        super(NME_loss, self).__init__()
+        super().__init__()
         self.name = name
 
     def forward(self, pred, gt):
@@ -360,7 +353,7 @@ def main_function():
 
     best_nme = 100
     for epoch in range(args.epoch):
-        print("Epoch: %d" % (epoch + 1))
+        print(f"Epoch: {epoch + 1}")
         # train
         model.train()
         train_edge_heatmap_loss = 0
@@ -446,21 +439,11 @@ def main_function():
                 ) in enumerate(tqdm(valid_loader)):
                     if args.heatmap == "None":
                         y, landmarks = model(input.to(device))
-                    elif args.heatmap == "VQVAE":
-                        _, reference_heatmaps, _, _, _, _, _, _, _ = vqvae_model(
-                            resized_input.to(device)
-                        )
-                        y, landmarks = model(
-                            input.to(device), reference_heatmaps=reference_heatmaps
-                        )
-                    elif args.heatmap == "CodeFormer":
-                        _, reference_heatmaps, _, _, _, _, _, _, _ = vqvae_model(
-                            resized_input.to(device)
-                        )
-                        y, landmarks = model(
-                            input.to(device), reference_heatmaps=reference_heatmaps
-                        )
-                    elif args.heatmap == "ORFormer":
+                    elif (
+                        args.heatmap == "VQVAE"
+                        or args.heatmap == "CodeFormer"
+                        or args.heatmap == "ORFormer"
+                    ):
                         _, reference_heatmaps, _, _, _, _, _, _, _ = vqvae_model(
                             resized_input.to(device)
                         )

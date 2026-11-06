@@ -1,7 +1,7 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import numpy as np
+import torch
+import torch.nn.functional as F
+from torch import nn
 
 
 class ResidualLayer(nn.Module):
@@ -13,7 +13,7 @@ class ResidualLayer(nn.Module):
     """
 
     def __init__(self, in_dim, h_dim, res_h_dim):
-        super(ResidualLayer, self).__init__()
+        super().__init__()
         self.res_block = nn.Sequential(
             nn.ReLU(True),
             nn.Conv2d(
@@ -38,7 +38,7 @@ class ResidualStack(nn.Module):
     """
 
     def __init__(self, in_dim, h_dim, res_h_dim, n_res_layers):
-        super(ResidualStack, self).__init__()
+        super().__init__()
         self.n_res_layers = n_res_layers
         self.stack = nn.ModuleList(
             [ResidualLayer(in_dim, h_dim, res_h_dim)] * n_res_layers

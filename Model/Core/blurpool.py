@@ -1,13 +1,12 @@
 import numpy as np
-
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 
 
 class BlurPool(nn.Module):
     def __init__(self, channels, pad_type="reflect", filt_size=4, stride=2, pad_off=0):
-        super(BlurPool, self).__init__()
+        super().__init__()
         self.filt_size = filt_size
         self.pad_off = pad_off
         self.pad_sizes = [
@@ -68,13 +67,13 @@ def get_pad_layer(pad_type):
     elif pad_type == "zero":
         PadLayer = nn.ZeroPad2d
     else:
-        print("Pad type [%s] not recognized" % pad_type)
+        print(f"Pad type [{pad_type}] not recognized")
     return PadLayer
 
 
 class BlurPool1D(nn.Module):
     def __init__(self, channels, pad_type="reflect", filt_size=3, stride=2, pad_off=0):
-        super(BlurPool1D, self).__init__()
+        super().__init__()
         self.filt_size = filt_size
         self.pad_off = pad_off
         self.pad_sizes = [
@@ -132,5 +131,5 @@ def get_pad_layer_1d(pad_type):
     elif pad_type == "zero":
         PadLayer = nn.ZeroPad1d
     else:
-        print("Pad type [%s] not recognized" % pad_type)
+        print(f"Pad type [{pad_type}] not recognized")
     return PadLayer
