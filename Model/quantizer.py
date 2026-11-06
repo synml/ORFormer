@@ -1,10 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
-
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class VectorQuantizer(nn.Module):
@@ -51,7 +46,7 @@ class VectorQuantizer(nn.Module):
             min_encoding_indices = min_encoding_indices.view(-1)
             min_encoding_indices = min_encoding_indices.unsqueeze(1)
             min_encodings = torch.zeros(
-                min_encoding_indices.shape[0], self.n_e).to(device)
+                min_encoding_indices.shape[0], self.n_e, device=z.device)
             min_encodings.scatter_(1, min_encoding_indices, 1)
             # get quantized latent vectors
             z_q = torch.matmul(min_encodings, self.embedding.weight).view(z.shape)
@@ -64,7 +59,7 @@ class VectorQuantizer(nn.Module):
                 OR_min_encoding_indices = OR_min_encoding_indices.view(-1)
                 OR_min_encoding_indices = OR_min_encoding_indices.unsqueeze(1)
                 OR_min_encodings = torch.zeros(
-                    OR_min_encoding_indices.shape[0], self.n_e).to(device)
+                    OR_min_encoding_indices.shape[0], self.n_e, device=z.device)
                 OR_min_encodings.scatter_(1, OR_min_encoding_indices, 1)
                 # get quantized latent vectors
                 OR_z_q = torch.matmul(OR_min_encodings, self.embedding.weight).view(z.shape)
@@ -93,7 +88,7 @@ class VectorQuantizer(nn.Module):
             # find closest encodings
             min_encoding_indices = torch.argmin(d, dim=1).unsqueeze(1)
             min_encodings = torch.zeros(
-                min_encoding_indices.shape[0], self.n_e).to(device)
+                min_encoding_indices.shape[0], self.n_e, device=z.device)
             min_encodings.scatter_(1, min_encoding_indices, 1)
 
             # get quantized latent vectors
@@ -120,7 +115,7 @@ class VectorQuantizer(nn.Module):
         min_encoding_indices = min_encoding_indices.view(-1)
         min_encoding_indices = min_encoding_indices.unsqueeze(1)
         min_encodings = torch.zeros(
-            min_encoding_indices.shape[0], self.n_e).to(device)
+            min_encoding_indices.shape[0], self.n_e, device=z.device)
         min_encodings.scatter_(1, min_encoding_indices, 1)
 
         # get quantized latent vectors
