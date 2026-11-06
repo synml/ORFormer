@@ -11,7 +11,7 @@ authors = [{ name = "Seokyong Shin", email = "kistssy@gmail.com" }]
 dependencies = [
     "einops",
     "numpy",
-    "onnxruntime-gpu",
+    "onnxruntime-gpu[cuda,cudnn]",
     "opencv-python",
     "pillow",
     "scipy",
