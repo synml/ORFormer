@@ -1,11 +1,14 @@
+import argparse
 import os
 import sys
 
-os.chdir(sys.path[0])
-
-import argparse
-
+import numpy as np
 import torch
+import wandb
+from PIL import ImageDraw
+from torch import nn
+from torchvision import transforms
+from tqdm import tqdm
 
 from Config import cfg
 from Dataloader import (
@@ -14,20 +17,14 @@ from Dataloader import (
     WFLW_heatmap_Dataset,
     denorm_points,
 )
-
-torch.cuda.empty_cache()
-
-import numpy as np
-import wandb
-from PIL import ImageDraw
-from torch import nn
-from torchvision import transforms
-from tqdm import tqdm
-
 from Model.simple_vit import ORFormer
 from Model.StackedHGNet import IntergrationStackedHGNet
 from Model.VQVAE import VQVAE
 from utils import landmark_transforms as lt
+from utils.seed import set_determinism
+
+os.chdir(sys.path[0])
+torch.cuda.empty_cache()
 
 
 class NME_loss(nn.Module):
@@ -150,6 +147,7 @@ def main_function():
     torch.backends.cudnn.benchmark = cfg.CUDNN.BENCHMARK
     torch.backends.cudnn.deterministic = cfg.CUDNN.DETERMINISTIC
     torch.backends.cudnn.enabled = cfg.CUDNN.ENABLED
+    set_determinism(cfg.SEED)
 
     device = torch.device("cuda")
     if args.dataset == "WFLW":
@@ -490,6 +488,7 @@ def main_function():
                 if test_nme < best_nme:
                     best_nme = test_nme
                     save_model(model, resultDir)
+                print(f"Test NME {test_nme:.2f} (best {best_nme:.2f})")
             wandb.log(
                 {
                     "Best_NME": best_nme,

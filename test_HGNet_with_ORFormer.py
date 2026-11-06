@@ -1,12 +1,15 @@
+import argparse
 import os
-import os.path
 import sys
 
+import cv2
+import numpy as np
 import torch
-
-os.chdir(sys.path[0])
-
-import argparse
+import torchinfo
+from PIL import ImageDraw
+from scipy.integrate import simpson
+from torchvision import transforms
+from tqdm import tqdm
 
 from Config import cfg
 from Dataloader import (
@@ -15,24 +18,21 @@ from Dataloader import (
     WFLW_heatmap_Dataset,
     denorm_points,
 )
-
-torch.cuda.empty_cache()
-import cv2
-import numpy as np
-import torchinfo
-from PIL import ImageDraw
-from scipy.integrate import simpson
-from torchvision import transforms
-from tqdm import tqdm
-
 from Model.simple_vit import ORFormer
 from Model.StackedHGNet import IntergrationStackedHGNet
 from Model.VQVAE import VQVAE
+from utils.seed import set_determinism
+
+os.chdir(sys.path[0])
+torch.cuda.empty_cache()
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Test HGNet")
     parser.add_argument("--dataset", help="dataset", type=str, default="WFLW")
+    parser.add_argument(
+        "--weights", help="checkpoint (default: released weights)", type=str
+    )
     parser.add_argument("--nstack", help="nstack", type=int, default=4)
 
     args = parser.parse_args()
@@ -134,6 +134,7 @@ def main_function():
     torch.backends.cudnn.benchmark = cfg.CUDNN.BENCHMARK
     torch.backends.cudnn.deterministic = cfg.CUDNN.DETERMINISTIC
     torch.backends.cudnn.enabled = cfg.CUDNN.ENABLED
+    set_determinism(cfg.SEED)
 
     device = torch.device("cuda")
     if args.dataset == "WFLW":
@@ -142,7 +143,7 @@ def main_function():
             edge_info=cfg.WFLW.EDGE_INFO,
             nstack=args.nstack,
         )
-        model.load_weights("weights/HGNet/WFLW/best_model.pt")
+        model.load_weights(args.weights or "weights/HGNet/WFLW/best_model.pt")
         vit_model = ORFormer(
             image_size=16,
             patch_size=1,
@@ -172,7 +173,7 @@ def main_function():
             edge_info=cfg.W300.EDGE_INFO,
             nstack=args.nstack,
         )
-        model.load_weights("weights/HGNet/300W/best_model.pt")
+        model.load_weights(args.weights or "weights/HGNet/300W/best_model.pt")
         vit_model = ORFormer(
             image_size=16,
             patch_size=1,
@@ -202,7 +203,7 @@ def main_function():
             edge_info=cfg.COFW.EDGE_INFO,
             nstack=args.nstack,
         )
-        model.load_weights("weights/HGNet/COFW/best_model.pt")
+        model.load_weights(args.weights or "weights/HGNet/COFW/best_model.pt")
         vit_model = ORFormer(
             image_size=16,
             patch_size=1,

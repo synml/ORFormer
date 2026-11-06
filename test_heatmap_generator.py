@@ -1,10 +1,6 @@
-import os
-import os.path
-import sys
-
-os.chdir(sys.path[0])
-
 import argparse
+import os
+import sys
 
 import cv2
 import numpy as np
@@ -16,6 +12,9 @@ from tqdm import tqdm
 from Config import cfg
 from Dataloader import COFW_heatmap_Dataset, W300_heatmap_Dataset, WFLW_heatmap_Dataset
 from Model.VQVAE import VQVAE
+from utils.seed import set_determinism
+
+os.chdir(sys.path[0])
 
 
 def parse_args():
@@ -61,6 +60,7 @@ def main_function():
     torch.backends.cudnn.benchmark = cfg.CUDNN.BENCHMARK
     torch.backends.cudnn.deterministic = cfg.CUDNN.DETERMINISTIC
     torch.backends.cudnn.enabled = cfg.CUDNN.ENABLED
+    set_determinism(cfg.SEED)
 
     device = torch.device("cuda")
 

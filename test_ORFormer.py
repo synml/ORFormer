@@ -1,10 +1,6 @@
-import os
-import os.path
-import sys
-
-os.chdir(sys.path[0])
-
 import argparse
+import os
+import sys
 
 import cv2
 import numpy as np
@@ -17,11 +13,17 @@ from Config import cfg
 from Dataloader import COFW_heatmap_Dataset, W300_heatmap_Dataset, WFLW_heatmap_Dataset
 from Model.simple_vit import ORFormer
 from Model.VQVAE import VQVAE
+from utils.seed import set_determinism
+
+os.chdir(sys.path[0])
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train Sparse Facial Network")
     parser.add_argument("--dataset", help="dataset", type=str, default="WFLW")
+    parser.add_argument(
+        "--weights", help="checkpoint (default: released weights)", type=str
+    )
     args = parser.parse_args()
 
     return args
@@ -61,6 +63,7 @@ def main_function():
     torch.backends.cudnn.benchmark = cfg.CUDNN.BENCHMARK
     torch.backends.cudnn.deterministic = cfg.CUDNN.DETERMINISTIC
     torch.backends.cudnn.enabled = cfg.CUDNN.ENABLED
+    set_determinism(cfg.SEED)
 
     device = torch.device("cuda")
 
@@ -87,7 +90,7 @@ def main_function():
             save_img_embedding_map=False,
             vit=vit_model,
         )
-        vqvae.load_weights("weights/ORFormer/WFLW/best_model.pt")
+        vqvae.load_weights(args.weights or "weights/ORFormer/WFLW/best_model.pt")
     if args.dataset == "300W":
         vit_model = ORFormer(
             image_size=16,
@@ -111,7 +114,7 @@ def main_function():
             save_img_embedding_map=False,
             vit=vit_model,
         )
-        vqvae.load_weights("weights/ORFormer/300W/best_model.pt")
+        vqvae.load_weights(args.weights or "weights/ORFormer/300W/best_model.pt")
         vqvae = vqvae.to(device)
     if args.dataset == "COFW":
         vit_model = ORFormer(
@@ -136,7 +139,7 @@ def main_function():
             save_img_embedding_map=False,
             vit=vit_model,
         )
-        vqvae.load_weights("weights/ORFormer/COFW/best_model.pt")
+        vqvae.load_weights(args.weights or "weights/ORFormer/COFW/best_model.pt")
         vqvae = vqvae.to(device)
 
     normalize_transform = transforms.Compose(

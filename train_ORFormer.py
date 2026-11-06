@@ -1,11 +1,7 @@
+import argparse
 import os
-import os.path
 import sys
 from os import path
-
-os.chdir(sys.path[0])
-
-import argparse
 
 import numpy as np
 import torch
@@ -19,6 +15,9 @@ from Dataloader import COFW_heatmap_Dataset, W300_heatmap_Dataset, WFLW_heatmap_
 from Model.simple_vit import ORFormer
 from Model.VQVAE import VQVAE
 from utils import landmark_transforms as lt
+from utils.seed import set_determinism
+
+os.chdir(sys.path[0])
 
 
 def parse_args():
@@ -81,6 +80,7 @@ def main_function():
     torch.backends.cudnn.benchmark = cfg.CUDNN.BENCHMARK
     torch.backends.cudnn.deterministic = cfg.CUDNN.DETERMINISTIC
     torch.backends.cudnn.enabled = cfg.CUDNN.ENABLED
+    set_determinism(cfg.SEED)
 
     device = torch.device("cuda")
 
@@ -464,6 +464,9 @@ def main_function():
                 if valid_heatmap_loss < best_heatmap_loss:
                     best_heatmap_loss = valid_heatmap_loss
                     save_model(model, resultDir)
+                print(
+                    f"Valid heatmap loss {valid_heatmap_loss:.2f} (best {best_heatmap_loss:.2f})"
+                )
                 wandb.log(
                     {
                         "Train_Entropy_loss": train_entropy_loss,
