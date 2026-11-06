@@ -8,8 +8,8 @@ def get_3rd_point(a, b):
 
 
 def get_affine_transform(
-        center, scale, rot, output_size,
-        shift=np.array([0, 0], dtype=np.float32), inv=0):
+    center, scale, rot, output_size, shift=np.array([0, 0], dtype=np.float32), inv=0
+):
     if not isinstance(scale, np.ndarray) and not isinstance(scale, list):
         scale = np.array([scale, scale])
 
@@ -54,8 +54,7 @@ def crop_v2(img, center, scale, output_size, rot=0):
     trans = get_affine_transform(center, scale, rot, output_size)
 
     dst_img = cv2.warpAffine(
-        img, trans, (int(output_size[0]), int(output_size[1])),
-        flags=cv2.INTER_LINEAR
+        img, trans, (int(output_size[0]), int(output_size[1])), flags=cv2.INTER_LINEAR
     )
 
     return dst_img, trans
@@ -63,7 +62,7 @@ def crop_v2(img, center, scale, output_size, rot=0):
 
 def transform_pixel_v2(pt, trans, inverse=False):
     if inverse is False:
-        pt = pt @ (trans[:,0:2].T) + trans[:,2]
+        pt = pt @ (trans[:, 0:2].T) + trans[:, 2]
     else:
-        pt = (pt - trans[:,2]) @ np.linalg.inv(trans[:,0:2].T)
+        pt = (pt - trans[:, 2]) @ np.linalg.inv(trans[:, 0:2].T)
     return pt

@@ -32,8 +32,14 @@ def get_3rd_point(a, b):
     return b + np.array([-direct[1], direct[0]], dtype=np.float32)
 
 
-def get_transforms(bbox, scale_factor, rotation_factor, output_size, shift_factor=np.array([0, 0], dtype=np.float32),
-                   inv=False):
+def get_transforms(
+    bbox,
+    scale_factor,
+    rotation_factor,
+    output_size,
+    shift_factor=np.array([0, 0], dtype=np.float32),
+    inv=False,
+):
 
     scale_size = calculate_scale(bbox, scale_factor, output_size)
 
@@ -48,7 +54,9 @@ def get_transforms(bbox, scale_factor, rotation_factor, output_size, shift_facto
     src = np.zeros((3, 2), dtype=np.float32)
     dst = np.zeros((3, 2), dtype=np.float32)
 
-    center = np.array([bbox[0] + (bbox[2] / 2.0), bbox[1] + (bbox[3] / 2.0)], dtype=float)
+    center = np.array(
+        [bbox[0] + (bbox[2] / 2.0), bbox[1] + (bbox[3] / 2.0)], dtype=float
+    )
 
     src[0, :] = center + scale_tmp * shift_factor
     src[1, :] = center + src_dir + scale_tmp * shift_factor
@@ -67,7 +75,7 @@ def get_transforms(bbox, scale_factor, rotation_factor, output_size, shift_facto
 
 
 def affine_transform(pt, t):
-    new_pt = np.array([pt[0], pt[1], 1.]).T
+    new_pt = np.array([pt[0], pt[1], 1.0]).T
     new_pt = np.dot(t, new_pt)
     return new_pt[:2]
 

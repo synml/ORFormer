@@ -24,7 +24,7 @@ class VectorQuantizer(nn.Module):
 
     def forward(self, z, vit=None):
         """
-        Inputs the output of the encoder network z and maps it to a discrete 
+        Inputs the output of the encoder network z and maps it to a discrete
         one-hot vector that is the index of the closest embedding vector e_j
 
         z (continuous) -> z_q (discrete)
@@ -38,7 +38,12 @@ class VectorQuantizer(nn.Module):
 
         """
         if vit is not None:
-            predicted_min_indices, OR_predicted_min_indices, OR_portion, attention_weights = vit(z)
+            (
+                predicted_min_indices,
+                OR_predicted_min_indices,
+                OR_portion,
+                attention_weights,
+            ) = vit(z)
 
             z = z.permute(0, 2, 3, 1).contiguous()
 
@@ -46,57 +51,79 @@ class VectorQuantizer(nn.Module):
             min_encoding_indices = min_encoding_indices.view(-1)
             min_encoding_indices = min_encoding_indices.unsqueeze(1)
             min_encodings = torch.zeros(
-                min_encoding_indices.shape[0], self.n_e, device=z.device)
+                min_encoding_indices.shape[0], self.n_e, device=z.device
+            )
             min_encodings.scatter_(1, min_encoding_indices, 1)
             # get quantized latent vectors
             z_q = torch.matmul(min_encodings, self.embedding.weight).view(z.shape)
             # z_q = z + (z_q - z).detach()
-            
+
             if OR_predicted_min_indices is None:
                 Z_q = z_q
             else:
-                OR_min_encoding_indices = OR_predicted_min_indices.argmax(dim=-1).squeeze()
+                OR_min_encoding_indices = OR_predicted_min_indices.argmax(
+                    dim=-1
+                ).squeeze()
                 OR_min_encoding_indices = OR_min_encoding_indices.view(-1)
                 OR_min_encoding_indices = OR_min_encoding_indices.unsqueeze(1)
                 OR_min_encodings = torch.zeros(
-                    OR_min_encoding_indices.shape[0], self.n_e, device=z.device)
+                    OR_min_encoding_indices.shape[0], self.n_e, device=z.device
+                )
                 OR_min_encodings.scatter_(1, OR_min_encoding_indices, 1)
                 # get quantized latent vectors
-                OR_z_q = torch.matmul(OR_min_encodings, self.embedding.weight).view(z.shape)
+                OR_z_q = torch.matmul(OR_min_encodings, self.embedding.weight).view(
+                    z.shape
+                )
                 # OR_z_q = z + (OR_z_q - z).detach()
 
                 # compute the weighted sum of two quantized latent vectors
                 OR_portion = OR_portion.view(z.shape[0], z.shape[1], z.shape[2], 1)
-                attention_weights = attention_weights.view(z.shape[0], z.shape[1], z.shape[2], 1)
+                attention_weights = attention_weights.view(
+                    z.shape[0], z.shape[1], z.shape[2], 1
+                )
                 Z_q = OR_portion * OR_z_q + (1 - OR_portion) * z_q
 
                 # preserve gradients
                 # Z_q = z + (Z_q - z).detach()
 
             Z_q = Z_q.permute(0, 3, 1, 2).contiguous()
-            return None, Z_q, None, min_encodings, min_encoding_indices, predicted_min_indices, OR_predicted_min_indices, OR_portion, attention_weights
+            return (
+                None,
+                Z_q,
+                None,
+                min_encodings,
+                min_encoding_indices,
+                predicted_min_indices,
+                OR_predicted_min_indices,
+                OR_portion,
+                attention_weights,
+            )
         else:
             # reshape z -> (batch, height, width, channel) and flatten
             z = z.permute(0, 2, 3, 1).contiguous()
             z_flattened = z.view(-1, self.c_dim)
             # distances from z to embeddings e_j (z - e)^2 = z^2 + e^2 - 2 e * z
 
-            d = torch.sum(z_flattened ** 2, dim=1, keepdim=True) + \
-                torch.sum(self.embedding.weight**2, dim=1) - 2 * \
-                torch.matmul(z_flattened, self.embedding.weight.t())
+            d = (
+                torch.sum(z_flattened**2, dim=1, keepdim=True)
+                + torch.sum(self.embedding.weight**2, dim=1)
+                - 2 * torch.matmul(z_flattened, self.embedding.weight.t())
+            )
 
             # find closest encodings
             min_encoding_indices = torch.argmin(d, dim=1).unsqueeze(1)
             min_encodings = torch.zeros(
-                min_encoding_indices.shape[0], self.n_e, device=z.device)
+                min_encoding_indices.shape[0], self.n_e, device=z.device
+            )
             min_encodings.scatter_(1, min_encoding_indices, 1)
 
             # get quantized latent vectors
             z_q = torch.matmul(min_encodings, self.embedding.weight).view(z.shape)
 
             # compute loss for embedding
-            loss = torch.mean((z_q.detach() - z)**2) + self.beta * \
-                torch.mean((z_q - z.detach()) ** 2)
+            loss = torch.mean((z_q.detach() - z) ** 2) + self.beta * torch.mean(
+                (z_q - z.detach()) ** 2
+            )
 
             # preserve gradients
             z_q = z + (z_q - z).detach()
@@ -108,14 +135,25 @@ class VectorQuantizer(nn.Module):
             # reshape back to match original input shape
             z_q = z_q.permute(0, 3, 1, 2).contiguous()
 
-            return loss, z_q, perplexity, min_encodings, min_encoding_indices, None, None, None, None
-    
+            return (
+                loss,
+                z_q,
+                perplexity,
+                min_encodings,
+                min_encoding_indices,
+                None,
+                None,
+                None,
+                None,
+            )
+
     def get_latent(self, min_encoding_indices, z):
         z = z.permute(0, 2, 3, 1).contiguous()
         min_encoding_indices = min_encoding_indices.view(-1)
         min_encoding_indices = min_encoding_indices.unsqueeze(1)
         min_encodings = torch.zeros(
-            min_encoding_indices.shape[0], self.n_e, device=z.device)
+            min_encoding_indices.shape[0], self.n_e, device=z.device
+        )
         min_encodings.scatter_(1, min_encoding_indices, 1)
 
         # get quantized latent vectors

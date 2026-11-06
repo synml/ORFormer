@@ -8,12 +8,15 @@ from .Core.blurpool import BlurPool
 from .Core.coord_conv import CoordConvTh
 from os import path
 
+
 def _make_grid(h, w):
     yy, xx = torch.meshgrid(
-        torch.arange(h).float() / (h-1)*2-1,
-        torch.arange(w).float() / (w-1)*2-1,
-        indexing='ij')
+        torch.arange(h).float() / (h - 1) * 2 - 1,
+        torch.arange(w).float() / (w - 1) * 2 - 1,
+        indexing="ij",
+    )
     return yy, xx
+
 
 def get_coords_from_heatmap(heatmap):
     """
@@ -32,36 +35,39 @@ def get_coords_from_heatmap(heatmap):
 
     heatmap_sum = torch.clamp(heatmap.sum([2, 3]), min=1e-6)
 
-    yy_coord = (yy * heatmap).sum([2, 3]) / heatmap_sum # batch x npoints
-    xx_coord = (xx * heatmap).sum([2, 3]) / heatmap_sum # batch x npoints
+    yy_coord = (yy * heatmap).sum([2, 3]) / heatmap_sum  # batch x npoints
+    xx_coord = (xx * heatmap).sum([2, 3]) / heatmap_sum  # batch x npoints
     coords = torch.stack([xx_coord, yy_coord], dim=-1)
 
     return coords
 
+
 class Activation(nn.Module):
-    def __init__(self, kind: str = 'relu', channel=None):
+    def __init__(self, kind: str = "relu", channel=None):
         super().__init__()
         self.kind = kind
 
-        if '+' in kind:
-            norm_str, act_str = kind.split('+')
+        if "+" in kind:
+            norm_str, act_str = kind.split("+")
         else:
-            norm_str, act_str = 'none', kind
+            norm_str, act_str = "none", kind
 
         self.norm_fn = {
-            'in': F.instance_norm,
-            'bn': nn.BatchNorm2d(channel),
-            'bn_noaffine': nn.BatchNorm2d(channel, affine=False, track_running_stats=True),
-            'none': None
+            "in": F.instance_norm,
+            "bn": nn.BatchNorm2d(channel),
+            "bn_noaffine": nn.BatchNorm2d(
+                channel, affine=False, track_running_stats=True
+            ),
+            "none": None,
         }[norm_str]
 
         self.act_fn = {
-            'relu': F.relu,
-            'softplus': nn.Softplus(),
-            'exp': torch.exp,
-            'sigmoid': torch.sigmoid,
-            'tanh': torch.tanh,
-            'none': None
+            "relu": F.relu,
+            "softplus": nn.Softplus(),
+            "exp": torch.exp,
+            "sigmoid": torch.sigmoid,
+            "tanh": torch.tanh,
+            "none": None,
         }[act_str]
 
         self.channel = channel
@@ -74,14 +80,24 @@ class Activation(nn.Module):
         return x
 
     def extra_repr(self):
-        return f'kind={self.kind}, channel={self.channel}'
+        return f"kind={self.kind}, channel={self.channel}"
+
 
 class ConvBlock(nn.Module):
-    def __init__(self, inp_dim, out_dim, kernel_size=3, stride=1, bn=False, relu=True, groups=1):
+    def __init__(
+        self, inp_dim, out_dim, kernel_size=3, stride=1, bn=False, relu=True, groups=1
+    ):
         super(ConvBlock, self).__init__()
         self.inp_dim = inp_dim
-        self.conv = nn.Conv2d(inp_dim, out_dim, kernel_size,
-                              stride, padding=(kernel_size-1)//2, groups=groups, bias=True)
+        self.conv = nn.Conv2d(
+            inp_dim,
+            out_dim,
+            kernel_size,
+            stride,
+            padding=(kernel_size - 1) // 2,
+            groups=groups,
+            bias=True,
+        )
         self.relu = None
         self.bn = None
         if relu:
@@ -96,6 +112,7 @@ class ConvBlock(nn.Module):
         if self.relu is not None:
             x = self.relu(x)
         return x
+
 
 class MultiViewBlock(nn.Module):
     def __init__(self, inp_dim, out_dim, groups=1):
@@ -144,6 +161,7 @@ class MultiViewBlock(nn.Module):
         out += residual
         return out
 
+
 class ResBlock(nn.Module):
     def __init__(self, inp_dim, out_dim, mid_dim=None):
         super(ResBlock, self).__init__()
@@ -179,10 +197,21 @@ class ResBlock(nn.Module):
         out += residual
         return out
 
+
 class Hourglass(nn.Module):
-    def __init__(self, n, f, increase=0, up_mode='nearest', 
-                 add_coord=False, pool_type="origin", use_multiview=False, 
-                 first_one=False, x_dim=64, y_dim=64):
+    def __init__(
+        self,
+        n,
+        f,
+        increase=0,
+        up_mode="nearest",
+        add_coord=False,
+        pool_type="origin",
+        use_multiview=False,
+        first_one=False,
+        x_dim=64,
+        y_dim=64,
+    ):
         super(Hourglass, self).__init__()
         nf = f + increase
 
@@ -192,13 +221,20 @@ class Hourglass(nn.Module):
             Block = ResBlock
 
         if add_coord:
-            self.coordconv = CoordConvTh(x_dim=x_dim, y_dim=y_dim,
-                                         with_r=True, with_boundary=True,
-                                         relu=False, bn=False,
-                                         in_channels=f, out_channels=f,
-                                         first_one=first_one,
-                                         kernel_size=1,
-                                         stride=1, padding=0)
+            self.coordconv = CoordConvTh(
+                x_dim=x_dim,
+                y_dim=y_dim,
+                with_r=True,
+                with_boundary=True,
+                relu=False,
+                bn=False,
+                in_channels=f,
+                out_channels=f,
+                first_one=first_one,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+            )
         else:
             self.coordconv = None
         self.up1 = Block(f, f)
@@ -207,9 +243,13 @@ class Hourglass(nn.Module):
         if pool_type == "origin":
             self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         elif pool_type == "blur":
-            self.pool1 = nn.Sequential(*[nn.MaxPool2d(kernel_size=2, stride=1), 
-                                         BlurPool(f, filt_size=3, stride=2)])
-            #self.pool1 = BlurPool(f, filt_size=3, stride=2)
+            self.pool1 = nn.Sequential(
+                *[
+                    nn.MaxPool2d(kernel_size=2, stride=1),
+                    BlurPool(f, filt_size=3, stride=2),
+                ]
+            )
+            # self.pool1 = BlurPool(f, filt_size=3, stride=2)
         else:
             assert False
 
@@ -217,7 +257,14 @@ class Hourglass(nn.Module):
         self.n = n
         # Recursive hourglass
         if self.n > 1:
-            self.low2 = Hourglass(n=n-1, f=nf, increase=increase, up_mode=up_mode, add_coord=False, pool_type=pool_type)
+            self.low2 = Hourglass(
+                n=n - 1,
+                f=nf,
+                increase=increase,
+                up_mode=up_mode,
+                add_coord=False,
+                pool_type=pool_type,
+            )
         else:
             self.low2 = Block(nf, nf)
         self.low3 = Block(nf, f)
@@ -234,6 +281,7 @@ class Hourglass(nn.Module):
         up2 = self.up2(low3)
         return up1 + up2
 
+
 class E2HTransform(nn.Module):
     def __init__(self, edge_info, num_points, num_edges):
         super().__init__()
@@ -246,25 +294,37 @@ class E2HTransform(nn.Module):
         e2h_matrix = torch.from_numpy(e2h_matrix).float()
 
         # pn x en x 1 x 1.
-        self.register_buffer('weight', e2h_matrix.view(
-            e2h_matrix.size(0), e2h_matrix.size(1), 1, 1))
+        self.register_buffer(
+            "weight", e2h_matrix.view(e2h_matrix.size(0), e2h_matrix.size(1), 1, 1)
+        )
 
         # some keypoints are not coverred by any edges,
         # in these cases, we must add a constant bias to their heatmap weights.
-        bias = ((e2h_matrix @ torch.ones(e2h_matrix.size(1)).to(
-            e2h_matrix)) < 0.5).to(e2h_matrix)
+        bias = ((e2h_matrix @ torch.ones(e2h_matrix.size(1)).to(e2h_matrix)) < 0.5).to(
+            e2h_matrix
+        )
         # pn x 1.
-        self.register_buffer('bias', bias)
+        self.register_buffer("bias", bias)
 
     def forward(self, edgemaps):
         # input: batch_size x en x hw x hh.
         # output: batch_size x pn x hw x hh.
         return F.conv2d(edgemaps, weight=self.weight, bias=self.bias)
-        
+
+
 class IntergrationStackedHGNet(nn.Module):
-    def __init__(self, classes_num, edge_info,
-                 nstack=4, nlevels=4, in_channel=256, increase=0,
-                 add_coord=True, pool_type="origin", use_multiview=False):
+    def __init__(
+        self,
+        classes_num,
+        edge_info,
+        nstack=4,
+        nlevels=4,
+        in_channel=256,
+        increase=0,
+        add_coord=True,
+        pool_type="origin",
+        use_multiview=False,
+    ):
         super(IntergrationStackedHGNet, self).__init__()
         self.nstack = nstack
         self.add_coord = add_coord
@@ -276,33 +336,50 @@ class IntergrationStackedHGNet(nn.Module):
         self.num_points = classes_num[2]
 
         if self.add_coord:
-            convBlock = CoordConvTh(x_dim=256, y_dim=256,
-                                    with_r=True, with_boundary=False,
-                                    relu=True, bn=True,
-                                    in_channels=3, out_channels=64,
-                                    kernel_size=7,
-                                    stride=2, padding=3)
+            convBlock = CoordConvTh(
+                x_dim=256,
+                y_dim=256,
+                with_r=True,
+                with_boundary=False,
+                relu=True,
+                bn=True,
+                in_channels=3,
+                out_channels=64,
+                kernel_size=7,
+                stride=2,
+                padding=3,
+            )
         else:
             convBlock = ConvBlock(3, 64, 7, 2, bn=True, relu=True)
 
-
         self.e2h_transform = E2HTransform(edge_info, self.num_points, self.num_edges)
         if self.add_coord:
-            convBlock = CoordConvTh(x_dim=256, y_dim=256,
-                                    with_r=True, with_boundary=False,
-                                    relu=True, bn=True,
-                                    in_channels=3, out_channels=64,
-                                    kernel_size=7,
-                                    stride=2, padding=3)
+            convBlock = CoordConvTh(
+                x_dim=256,
+                y_dim=256,
+                with_r=True,
+                with_boundary=False,
+                relu=True,
+                bn=True,
+                in_channels=3,
+                out_channels=64,
+                kernel_size=7,
+                stride=2,
+                padding=3,
+            )
         else:
             convBlock = ConvBlock(3, 64, 7, 2, bn=True, relu=True)
 
         if pool_type == "origin":
             pool = nn.MaxPool2d(kernel_size=2, stride=2)
         elif pool_type == "blur":
-            pool = nn.Sequential(*[nn.MaxPool2d(kernel_size=2, stride=1), 
-                                   BlurPool(128, filt_size=3, stride=2)])
-            #pool = BlurPool(128, filt_size=3, stride=2)
+            pool = nn.Sequential(
+                *[
+                    nn.MaxPool2d(kernel_size=2, stride=1),
+                    BlurPool(128, filt_size=3, stride=2),
+                ]
+            )
+            # pool = BlurPool(128, filt_size=3, stride=2)
         else:
             assert False
 
@@ -312,47 +389,81 @@ class IntergrationStackedHGNet(nn.Module):
             Block = ResBlock
 
         self.pre = nn.Sequential(
-            convBlock,
-            Block(64, 128),
-            pool,
-            Block(128, 128),
-            Block(128, in_channel)
+            convBlock, Block(64, 128), pool, Block(128, 128), Block(128, in_channel)
         )
 
-        self.conv = nn.Conv2d(in_channel+len(edge_info), in_channel, kernel_size=1, stride=1, padding=0)
-        
-        self.hgs = nn.ModuleList(
-            [Hourglass(n=nlevels, f=in_channel, increase=increase, add_coord=self.add_coord, pool_type=self.pool_type, use_multiview=self.use_multiview, first_one=(_==0))
-             for _ in range(nstack)])
+        self.conv = nn.Conv2d(
+            in_channel + len(edge_info), in_channel, kernel_size=1, stride=1, padding=0
+        )
 
-        self.features = nn.ModuleList([
-            nn.Sequential(
-                Block(in_channel, in_channel),
-                ConvBlock(in_channel, in_channel, 1, bn=True, relu=True)
-            ) for _ in range(nstack)])
+        self.hgs = nn.ModuleList(
+            [
+                Hourglass(
+                    n=nlevels,
+                    f=in_channel,
+                    increase=increase,
+                    add_coord=self.add_coord,
+                    pool_type=self.pool_type,
+                    use_multiview=self.use_multiview,
+                    first_one=(_ == 0),
+                )
+                for _ in range(nstack)
+            ]
+        )
+
+        self.features = nn.ModuleList(
+            [
+                nn.Sequential(
+                    Block(in_channel, in_channel),
+                    ConvBlock(in_channel, in_channel, 1, bn=True, relu=True),
+                )
+                for _ in range(nstack)
+            ]
+        )
 
         self.out_heatmaps = nn.ModuleList(
-            [ConvBlock(in_channel, self.num_heats, 1, relu=False, bn=False)
-             for _ in range(nstack)])
+            [
+                ConvBlock(in_channel, self.num_heats, 1, relu=False, bn=False)
+                for _ in range(nstack)
+            ]
+        )
         self.out_edgemaps = nn.ModuleList(
-            [ConvBlock(in_channel, self.num_edges, 1, relu=False, bn=False)
-             for _ in range(nstack)])
+            [
+                ConvBlock(in_channel, self.num_edges, 1, relu=False, bn=False)
+                for _ in range(nstack)
+            ]
+        )
         self.out_pointmaps = nn.ModuleList(
-            [ConvBlock(in_channel, self.num_points, 1, relu=False, bn=False)
-             for _ in range(nstack)])
+            [
+                ConvBlock(in_channel, self.num_points, 1, relu=False, bn=False)
+                for _ in range(nstack)
+            ]
+        )
 
         self.merge_features = nn.ModuleList(
-            [ConvBlock(in_channel, in_channel, 1, relu=False, bn=False)
-             for _ in range(nstack-1)])
+            [
+                ConvBlock(in_channel, in_channel, 1, relu=False, bn=False)
+                for _ in range(nstack - 1)
+            ]
+        )
         self.merge_heatmaps = nn.ModuleList(
-            [ConvBlock(self.num_heats, in_channel, 1, relu=False, bn=False)
-             for _ in range(nstack-1)])
+            [
+                ConvBlock(self.num_heats, in_channel, 1, relu=False, bn=False)
+                for _ in range(nstack - 1)
+            ]
+        )
         self.merge_edgemaps = nn.ModuleList(
-            [ConvBlock(self.num_edges, in_channel, 1, relu=False, bn=False)
-             for _ in range(nstack-1)])
+            [
+                ConvBlock(self.num_edges, in_channel, 1, relu=False, bn=False)
+                for _ in range(nstack - 1)
+            ]
+        )
         self.merge_pointmaps = nn.ModuleList(
-            [ConvBlock(self.num_points, in_channel, 1, relu=False, bn=False)
-             for _ in range(nstack-1)])
+            [
+                ConvBlock(self.num_points, in_channel, 1, relu=False, bn=False)
+                for _ in range(nstack - 1)
+            ]
+        )
         self.nstack = nstack
 
         self.heatmap_act = Activation("in+relu", self.num_heats)
@@ -364,7 +475,7 @@ class IntergrationStackedHGNet(nn.Module):
         if reference_heatmaps is not None:
             x = torch.cat([x, reference_heatmaps], dim=1)
             x = self.conv(x)
-        
+
         y = []
         heatmaps = None
         for i in range(self.nstack):
@@ -382,18 +493,20 @@ class IntergrationStackedHGNet(nn.Module):
             landmarks = get_coords_from_heatmap(edge_point_attention_mask * heatmaps)
 
             if i < self.nstack - 1:
-                x = x + \
-                    self.merge_features[i](feature) + \
-                    self.merge_heatmaps[i](heatmaps) + \
-                    self.merge_edgemaps[i](edgemaps) + \
-                    self.merge_pointmaps[i](pointmaps)
+                x = (
+                    x
+                    + self.merge_features[i](feature)
+                    + self.merge_heatmaps[i](heatmaps)
+                    + self.merge_edgemaps[i](edgemaps)
+                    + self.merge_pointmaps[i](pointmaps)
+                )
 
             y.append(landmarks)
             y.append(edgemaps)
             y.append(pointmaps)
 
         return y, landmarks
-    
+
     def load_weights(self, model_path):
         assert path.exists(model_path)
         weights = torch.load(model_path)

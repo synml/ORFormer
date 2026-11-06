@@ -1,5 +1,5 @@
-import numpy as np
 import torch
+
 
 def coords2heatmap(coords, img_size=256):
     """
@@ -13,6 +13,6 @@ def coords2heatmap(coords, img_size=256):
     heatmap = torch.zeros(bs, img_size, img_size, dtype=torch.float64)
     for i in range(bs):
         for coord in coords[i]:
-            x, y = coord*img_size
+            x, y = coord * img_size
             heatmap[i, round(x.item()), round(y.item())] = 1
     return heatmap

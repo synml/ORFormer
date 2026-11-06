@@ -53,6 +53,7 @@ typeCheckingMode = "standard"
 pythonVersion = "3.13"
 venvPath = "."
 venv = ".venv"
+exclude = ["Dataset", "weights", "**/__pycache__", "**/.*"]
 
 [tool.ruff.format]
 docstring-code-format = true
