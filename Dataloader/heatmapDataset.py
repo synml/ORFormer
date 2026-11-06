@@ -33,6 +33,8 @@ def circle_VQVAE(img, pt, color=255, interpolate_mode=cv2.INTER_AREA, scale=1):
 
 def circle_ADNet(img, pt, sigma=1.0, label_type="Gaussian"):
     # Check that any part of the gaussian is in-bounds
+    # float64: under numpy 2, float32 pt + tmp_size can round up and make the window 1px wider than g
+    pt = np.asarray(pt, dtype=np.float64)
     tmp_size = sigma * 3
     ul = [int(pt[0] - tmp_size), int(pt[1] - tmp_size)]
     br = [int(pt[0] + tmp_size + 1), int(pt[1] + tmp_size + 1)]
