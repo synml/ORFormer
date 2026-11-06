@@ -53,6 +53,21 @@ CUDA_VISIBLE_DEVICES=x python train_HGNet_with_ORFormer.py --dataset 300W --name
 CUDA_VISIBLE_DEVICES=x python train_HGNet_with_ORFormer.py --dataset COFW --name [run_name] --resultDir [result_dir] --lr 0.001 --batch_size 16 --alpha 0.05 --heatmap ORFormer
 ```
 
+### Determinism
+
+All train and test scripts seed Python, NumPy and PyTorch with `SEED` in `Config/default.py` (default 0) and run PyTorch in strict deterministic mode, so the same seed gives bit-identical checkpoints on the same hardware and package versions. An op without a deterministic CUDA kernel raises an error instead of silently varying. To get a different run, change `SEED`.
+
+## Evaluation
+
+The test scripts evaluate the released weights in `weights/` by default. Pass `--weights` to evaluate your own checkpoint (ORFormer and integration only):
+
+```bash
+python test_ORFormer.py --dataset WFLW --weights [result_dir]/[run_dir]/best_model.pt
+python test_HGNet_with_ORFormer.py --dataset WFLW --weights [result_dir]/[run_dir]/best_model.pt
+```
+
+Scripts change into the repository directory on start, so relative paths are resolved from there.
+
 ## ONNX Export
 
 Exports HGNet + ORFormer as a single model. Inputs: `img256` (1, 3, 256, 256) and `img64` (1, 3, 64, 64), RGB face crops with ImageNet normalization. Output: `landmarks` (1, N, 2) in 256x256 crop pixel coordinates.

@@ -1,7 +1,6 @@
 import argparse
 import os
 import sys
-from os import path
 
 import numpy as np
 import torch
@@ -297,8 +296,7 @@ def main_function():
         optimizer, args.T_0, args.T_mult
     )
 
-    if not path.exists(resultDir):
-        os.system(f"mkdir {resultDir}")
+    os.makedirs(resultDir, exist_ok=True)
 
     # Logits are flattened to (B*N, C): nll_loss2d on (B, C, N) has no deterministic CUDA kernel
     criterion = CrossEntropyLoss(reduction="sum")

@@ -1,7 +1,6 @@
 import argparse
 import os
 import sys
-from os import path
 
 import numpy as np
 import torch
@@ -205,8 +204,7 @@ def main_function():
         optimizer, T_0=args.T_0, T_mult=args.T_mult, eta_min=0.001 * args.lr
     )
 
-    if not path.exists(resultDir):
-        os.system(f"mkdir {resultDir}")
+    os.makedirs(resultDir, exist_ok=True)
 
     best_heatmap_loss = 10000
     for epoch in range(args.epoch):

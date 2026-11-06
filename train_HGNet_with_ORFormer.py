@@ -340,8 +340,7 @@ def main_function():
         optimizer, T_0=args.T_0, T_mult=args.T_mult, eta_min=0.001 * args.lr
     )
 
-    if not os.path.exists(resultDir):
-        os.system(f"mkdir {resultDir}")
+    os.makedirs(resultDir, exist_ok=True)
 
     criterion = NME_loss(args.dataset)
 
