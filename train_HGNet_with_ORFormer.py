@@ -25,6 +25,8 @@ from tqdm import tqdm
 
 import wandb
 
+import scipy.integrate
+scipy.integrate.simps = scipy.integrate.simpson  # shortcut: torchlm 0.1.6.10 (unmaintained) imports simps, removed in scipy 1.14; drop when torchlm fixes it
 import torchlm
 
 from Model.StackedHGNet import IntergrationStackedHGNet

@@ -2,7 +2,6 @@ import os
 import os.path
 import sys
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 os.chdir(sys.path[0])
 
@@ -23,7 +22,7 @@ from tqdm import tqdm
 from Model.VQVAE import VQVAE
 
 
-from cv2 import cv2
+import cv2
 
 import torchinfo
 

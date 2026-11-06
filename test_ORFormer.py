@@ -2,7 +2,6 @@ import os
 import os.path
 import sys
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 os.chdir(sys.path[0])
 
@@ -24,7 +23,7 @@ from Model.VQVAE import VQVAE
 
 from Model.simple_vit import SimpleViT, ORFormer
 
-from cv2 import cv2
+import cv2
 
 import torchinfo
 
@@ -79,7 +78,7 @@ def main_function():
         vit_model = ORFormer(image_size=16, patch_size=1, num_classes=2048, dim=256, depth=3, heads=8, mlp_dim=512, channels=256)
         vqvae = VQVAE(h_dim=128, res_h_dim=32, output_dim=cfg.W300.NUM_EDGE, n_res_layers=2, n_embeddings=2048, embedding_dim=256,
             code_dim=256, beta=0.25, save_img_embedding_map=False, vit=vit_model)
-        vqvae.load_weights("weights/VQVAE/300W/best_model.pt")
+        vqvae.load_weights("weights/ORFormer/300W/best_model.pt")
         vqvae = vqvae.to(device) 
     if args.dataset == "COFW":
         vit_model = ORFormer(image_size=16, patch_size=1, num_classes=2048, dim=256, depth=3, heads=8, mlp_dim=512, channels=256)

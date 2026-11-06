@@ -168,7 +168,7 @@ class WFLW_heatmap_Dataset(Dataset):
             #     continue
             for i in range(2 * self.number_landmarks):
                 temp_point.append(float(temp_info[i]))
-            point_coord = np.array(temp_point, dtype=np.float).reshape(self.number_landmarks, 2)
+            point_coord = np.array(temp_point, dtype=float).reshape(self.number_landmarks, 2)
             max_index = np.max(point_coord, axis=0)
             min_index = np.min(point_coord, axis=0)
             temp_box = np.array([min_index[0], min_index[1], max_index[0] - min_index[0],
@@ -538,7 +538,7 @@ class COFW_heatmap_Dataset(Dataset):
             assert data["images"][idx]["id"] == data["annotations"][idx]["image_id"]
             temp_name = os.path.join(self.root, 'images', data["images"][idx]["file_name"])
             temp_points = data["annotations"][idx]["keypoints"]
-            point_coord = np.array(temp_points, dtype=np.float).reshape(self.number_landmarks, 3)
+            point_coord = np.array(temp_points, dtype=float).reshape(self.number_landmarks, 3)
             point_coord = point_coord[:, :2]
             max_index = np.max(point_coord, axis=0)
             min_index = np.min(point_coord, axis=0)

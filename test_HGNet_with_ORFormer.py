@@ -4,7 +4,6 @@ from os import path
 import sys
 import os
 import torch
-os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
 os.chdir(sys.path[0])
 
@@ -31,9 +30,9 @@ from Model.VQVAE import VQVAE
 
 from Model.simple_vit import SimpleViT, ORFormer
 
-from cv2 import cv2
+import cv2
 
-from scipy.integrate import simps
+from scipy.integrate import simpson
 
 import torchinfo
 
@@ -66,7 +65,7 @@ def calculate_fr_auc(nmes, thres=None, step=0.0001):
     xs = np.arange(0, thres + step, step)
     ys = np.array([np.count_nonzero(nmes <= x) for x in xs]) / float(num_data)
     fr = 1.0 - ys[-1]
-    auc = simps(ys, x=xs) / thres
+    auc = simpson(ys, x=xs) / thres
     return [round(fr, 4), round(auc, 6)]
 
 def save_img(output, ground_truth, image, path, i, error, ours):
@@ -121,6 +120,7 @@ def main_function():
         vit_model = ORFormer(image_size=16, patch_size=1, num_classes=2048, dim=256, depth=3, heads=8, mlp_dim=512, channels=256)
         vqvae_model = VQVAE(h_dim=128, res_h_dim=32, output_dim=cfg.WFLW.NUM_EDGE, n_res_layers=2, n_embeddings=2048, embedding_dim=256,
             code_dim=256, beta=0.25, save_img_embedding_map=False, vit=vit_model)
+        vqvae_model.load_weights('weights/ORFormer/WFLW/best_model.pt')
     if args.dataset == "300W":
         model = IntergrationStackedHGNet(classes_num=[cfg.W300.NUM_POINT, cfg.W300.NUM_EDGE, cfg.W300.NUM_POINT],
                                edge_info=cfg.W300.EDGE_INFO, nstack=args.nstack)
