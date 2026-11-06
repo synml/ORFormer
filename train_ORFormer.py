@@ -300,6 +300,7 @@ def main_function():
     if not path.exists(resultDir):
         os.system(f"mkdir {resultDir}")
 
+    # Logits are flattened to (B*N, C): nll_loss2d on (B, C, N) has no deterministic CUDA kernel
     criterion = CrossEntropyLoss(reduction="sum")
     best_heatmap_loss = 10000
     for epoch in range(args.epoch):
@@ -322,7 +323,7 @@ def main_function():
                 _, _, _, _, min_indices, _, _, _, _ = original_vqvae_model(
                     resized_input.to(device)
                 )
-                target = min_indices.view(resized_input.shape[0], -1).detach().clone()
+                target = min_indices.view(-1).detach().clone()
             optimizer.zero_grad()
 
             _, x_hat, _, _, _, predicted_min_indices, OR_predicted_min_indices, _, _ = (
@@ -333,14 +334,14 @@ def main_function():
             train_heatmap_loss += heatmap_loss.cpu()
 
             if args.vit == "ORFormer":
-                prediction = predicted_min_indices.permute(0, 2, 1).contiguous()
-                OR_prediction = OR_predicted_min_indices.permute(0, 2, 1).contiguous()
+                prediction = predicted_min_indices.flatten(0, 1)
+                OR_prediction = OR_predicted_min_indices.flatten(0, 1)
                 loss1 = criterion(prediction, target)
                 loss2 = criterion(OR_prediction, target)
                 loss3 = heatmap_loss
                 loss = loss1 + loss2 + args.alpha * loss3
             if args.vit == "vit":
-                prediction = predicted_min_indices.permute(0, 2, 1).contiguous()
+                prediction = predicted_min_indices.flatten(0, 1)
                 loss1 = criterion(prediction, target)
                 loss2 = heatmap_loss
                 loss = loss1 + args.alpha * loss2
@@ -378,9 +379,7 @@ def main_function():
                     _, x_hat, _, _, min_indices, _, _, _, _ = original_vqvae_model(
                         resized_input.to(device)
                     )
-                    target = (
-                        min_indices.view(resized_input.shape[0], -1).detach().clone()
-                    )
+                    target = min_indices.view(-1).detach().clone()
                     gt_heatmap = meta["Edge_Heatmaps"].cuda()
                     heatmap_loss = torch.mean((x_hat - gt_heatmap) ** 2, axis=1).sum()
                     original_heatmap_loss += heatmap_loss.cpu()
@@ -397,13 +396,11 @@ def main_function():
                             _,
                             _,
                         ) = model(resized_occluded_input.to(device))
-                        prediction = predicted_min_indices.permute(0, 2, 1).contiguous()
+                        prediction = predicted_min_indices.flatten(0, 1)
                         loss = criterion(prediction, target)
                         valid_entropy_loss += loss.cpu()
 
-                        OR_prediction = OR_predicted_min_indices.permute(
-                            0, 2, 1
-                        ).contiguous()
+                        OR_prediction = OR_predicted_min_indices.flatten(0, 1)
                         loss = criterion(OR_prediction, target)
                         valid_OR_entropy_loss += loss.cpu()
 
@@ -435,7 +432,7 @@ def main_function():
                             _,
                             _,
                         ) = model(resized_occluded_input.to(device))
-                        prediction = predicted_min_indices.permute(0, 2, 1).contiguous()
+                        prediction = predicted_min_indices.flatten(0, 1)
                         loss = criterion(prediction, target)
                         valid_entropy_loss += loss.cpu()
 

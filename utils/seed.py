@@ -14,5 +14,5 @@ def set_determinism(seed: int) -> None:
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    # 결정적 커널이 없는 연산은 에러 대신 경고만 내도록 함
-    torch.use_deterministic_algorithms(True, warn_only=True)
+    # 결정적 커널이 없는 연산은 바로 에러를 내도록 함
+    torch.use_deterministic_algorithms(True)
