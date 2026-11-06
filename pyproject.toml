@@ -11,13 +11,13 @@ authors = [{ name = "Seokyong Shin", email = "kistssy@gmail.com" }]
 dependencies = [
     "einops",
     "numpy",
+    "onnx",
     "onnxruntime-gpu[cuda,cudnn]",
     "opencv-python",
     "pillow",
     "scipy",
     "torch",
     "torchinfo",
-    "torchlm",
     "torchvision",
     "tqdm",
     "wandb",
@@ -35,10 +35,6 @@ dev = [
 Repository = "https://github.com/synml/ORFormer"
 
 # Tools settings ----------------------------------------------------------------------
-[tool.uv]
-# torchlm이 요구하는 CPU용 onnxruntime을 설치하지 않는다(onnxruntime-gpu와 같은 모듈을 덮어씀).
-override-dependencies = ["onnxruntime; sys_platform == 'never'"]
-
 [tool.uv.sources]
 torch = { index = "pytorch-cu132" }
 torchvision = { index = "pytorch-cu132" }

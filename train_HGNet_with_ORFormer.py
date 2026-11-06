@@ -18,20 +18,16 @@ from Dataloader import (
 torch.cuda.empty_cache()
 
 import numpy as np
-import scipy.integrate
 import wandb
 from PIL import ImageDraw
 from torch import nn
 from torchvision import transforms
 from tqdm import tqdm
 
-# shortcut: torchlm 0.1.6.10 (unmaintained) imports simps, removed in scipy 1.14; drop when torchlm fixes it
-scipy.integrate.simps = scipy.integrate.simpson  # pyright: ignore[reportAttributeAccessIssue]
-import torchlm
-
 from Model.simple_vit import ORFormer
 from Model.StackedHGNet import IntergrationStackedHGNet
 from Model.VQVAE import VQVAE
+from utils import landmark_transforms as lt
 
 
 class NME_loss(nn.Module):
@@ -252,14 +248,14 @@ def main_function():
         vqvae_model = vqvae_model.to(device)
         vqvae_model.eval()
 
-    train_transform = torchlm.LandmarksCompose(
+    train_transform = lt.LandmarksCompose(
         [
-            torchlm.LandmarksRandomMask(mask_ratio=0.1, prob=0.4),
-            torchlm.bind(transforms.RandomGrayscale(p=0.5)),
-            torchlm.LandmarksRandomRotate(angle=(-30, 30)),
-            torchlm.LandmarksRandomTranslate(translate=(-0.04, 0.04)),
-            torchlm.LandmarksRandomScale(scale=(-0.05, 0.05)),
-            torchlm.LandmarksResize((256, 256), keep_aspect=True),
+            lt.LandmarksRandomMask(mask_ratio=0.1, prob=0.4),
+            lt.bind(transforms.RandomGrayscale(p=0.5)),
+            lt.LandmarksRandomRotate(angle=(-30, 30)),
+            lt.LandmarksRandomTranslate(translate=(-0.04, 0.04)),
+            lt.LandmarksRandomScale(scale=(-0.05, 0.05)),
+            lt.LandmarksResize((256, 256), keep_aspect=True),
         ]
     )
 

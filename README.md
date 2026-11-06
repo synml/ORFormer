@@ -69,6 +69,9 @@ python export_onnx.py --dataset WFLW --output face_landmarker.onnx
 | ORFormer                    | L2 Loss: 20.22 | L2 Loss: 10.97 | L2 Loss: 23.06 | train_ORFormer.py            | test_ORFormer.py            |
 | Integration                 | NME Loss: 3.86 | NME Loss: 2.90 | NME Loss: 4.46 | train_HGNet_with_ORFormer.py | test_HGNet_with_ORFormer.py |
 
+> [!NOTE]
+> In the released `weights.zip`, `weights/VQVAE/300W/best_model.pt` is byte-identical to `weights/ORFormer/300W/best_model.pt`, so the 300W heatmap generator scores L2 15.32 instead of 14.12. All other numbers reproduce. `train_ORFormer.py --dataset 300W` also starts from this file.
+
 ## Links
 
 [Datasets](https://drive.google.com/file/d/1JmKIstIrfp0mtfTvM0cxMHyZVxYB3k_0/view?usp=share_link)

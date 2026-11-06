@@ -8,7 +8,6 @@ os.chdir(sys.path[0])
 import argparse
 
 import numpy as np
-import scipy.integrate
 import torch
 import wandb
 from torch.nn import CrossEntropyLoss
@@ -17,13 +16,9 @@ from tqdm import tqdm
 
 from Config import cfg
 from Dataloader import COFW_heatmap_Dataset, W300_heatmap_Dataset, WFLW_heatmap_Dataset
-
-# shortcut: torchlm 0.1.6.10 (unmaintained) imports simps, removed in scipy 1.14; drop when torchlm fixes it
-scipy.integrate.simps = scipy.integrate.simpson  # pyright: ignore[reportAttributeAccessIssue]
-import torchlm
-
 from Model.simple_vit import ORFormer
 from Model.VQVAE import VQVAE
+from utils import landmark_transforms as lt
 
 
 def parse_args():
@@ -202,13 +197,13 @@ def main_function():
     original_vqvae_model.eval()
     model = model.to(device)
 
-    augmentation_transform = torchlm.LandmarksCompose(
+    augmentation_transform = lt.LandmarksCompose(
         [
-            torchlm.bind(transforms.RandomGrayscale(p=0.5)),
-            torchlm.LandmarksRandomRotate(angle=(-30, 30)),
-            torchlm.LandmarksRandomTranslate(translate=(-0.04, 0.04)),
-            torchlm.LandmarksRandomScale(scale=(-0.05, 0.05)),
-            torchlm.LandmarksResize((256, 256), keep_aspect=True),
+            lt.bind(transforms.RandomGrayscale(p=0.5)),
+            lt.LandmarksRandomRotate(angle=(-30, 30)),
+            lt.LandmarksRandomTranslate(translate=(-0.04, 0.04)),
+            lt.LandmarksRandomScale(scale=(-0.05, 0.05)),
+            lt.LandmarksResize((256, 256), keep_aspect=True),
         ]
     )
 
@@ -219,9 +214,9 @@ def main_function():
         ]
     )
 
-    mask_transform = torchlm.LandmarksCompose(
+    mask_transform = lt.LandmarksCompose(
         [
-            torchlm.LandmarksRandomMask(mask_ratio=0.1, prob=1),
+            lt.LandmarksRandomMask(mask_ratio=0.1, prob=1),
         ]
     )
 
