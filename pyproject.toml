@@ -1,0 +1,56 @@
+# Project settings --------------------------------------------------------------------
+[project]
+name = "orformer"
+version = "1.0.0"
+description = "ORFormer: Occlusion-Robust Transformer for Accurate Facial Landmark Detection"
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [{ name = "Seokyong Shin", email = "kistssy@gmail.com" }]
+
+# Required dependencies ---------------------------------------------------------------
+dependencies = [
+    "einops",
+    "numpy",
+    "opencv-python",
+    "pillow",
+    "scipy",
+    "torch",
+    "torchinfo",
+    "torchlm",
+    "torchvision",
+    "tqdm",
+    "wandb",
+    "yacs",
+]
+
+# Optional dependencies ---------------------------------------------------------------
+[dependency-groups]
+dev = [
+    "pyright",
+    "ruff",
+]
+
+[project.urls]
+Repository = "https://github.com/synml/ORFormer"
+
+# Tools settings ----------------------------------------------------------------------
+[tool.uv.sources]
+torch = { index = "pytorch-cu132" }
+torchvision = { index = "pytorch-cu132" }
+
+[[tool.uv.index]]
+name = "pytorch-cu132"
+url = "https://download.pytorch.org/whl/cu132"
+explicit = true
+
+[tool.pyright]
+typeCheckingMode = "standard"
+pythonVersion = "3.13"
+venvPath = "."
+venv = ".venv"
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
