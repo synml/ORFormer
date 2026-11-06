@@ -59,9 +59,10 @@ All train and test scripts seed Python, NumPy and PyTorch with `SEED` in `Config
 
 ## Evaluation
 
-The test scripts evaluate the released weights in `weights/` by default. Pass `--weights` to evaluate your own checkpoint (ORFormer and integration only):
+The test scripts evaluate the released weights in `weights/` by default. Pass `--weights` to evaluate your own checkpoint:
 
 ```bash
+python test_heatmap_generator.py --dataset WFLW --weights [result_dir]/[run_dir]/best_model.pt
 python test_ORFormer.py --dataset WFLW --weights [result_dir]/[run_dir]/best_model.pt
 python test_HGNet_with_ORFormer.py --dataset WFLW --weights [result_dir]/[run_dir]/best_model.pt
 ```
@@ -85,7 +86,7 @@ python export_onnx.py --dataset WFLW --output face_landmarker.onnx
 | Integration                 | NME Loss: 3.86 | NME Loss: 2.90 | NME Loss: 4.46 | train_HGNet_with_ORFormer.py | test_HGNet_with_ORFormer.py |
 
 > [!NOTE]
-> In the released `weights.zip`, `weights/VQVAE/300W/best_model.pt` is byte-identical to `weights/ORFormer/300W/best_model.pt`, so the 300W heatmap generator scores L2 15.32 instead of 14.12. All other numbers reproduce. `train_ORFormer.py --dataset 300W` also starts from this file.
+> In the released `weights.zip`, `weights/VQVAE/300W/best_model.pt` is byte-identical to `weights/ORFormer/300W/best_model.pt`, so the 300W heatmap generator scores L2 15.32 instead of 14.12. All other numbers reproduce. `train_ORFormer.py --dataset 300W` also starts from this file by default; train the 300W heatmap generator first and pass its checkpoint with `--vqvae_weights` to train ORFormer from a real stage-1 model.
 
 ## Links
 

@@ -29,6 +29,11 @@ def parse_args():
     parser.add_argument("--validEpoch", help="valid epoch number", type=int, default=1)
     parser.add_argument("--dataset", help="dataset", type=str, default="WFLW")
     parser.add_argument(
+        "--vqvae_weights",
+        help="stage-1 heatmap generator checkpoint (default: released weights)",
+        type=str,
+    )
+    parser.add_argument(
         "--resultDir",
         help="result directory",
         type=str,
@@ -95,7 +100,9 @@ def main_function():
             beta=0.25,
             save_img_embedding_map=False,
         )
-        original_vqvae_model.load_weights("weights/VQVAE/WFLW/best_model.pt")
+        original_vqvae_model.load_weights(
+            args.vqvae_weights or "weights/VQVAE/WFLW/best_model.pt"
+        )
         vit_model = ORFormer(
             image_size=16,
             patch_size=1,
@@ -118,7 +125,7 @@ def main_function():
             save_img_embedding_map=False,
             vit=vit_model,
         )
-        model.load_weights("weights/VQVAE/WFLW/best_model.pt")
+        model.load_weights(args.vqvae_weights or "weights/VQVAE/WFLW/best_model.pt")
     if args.dataset == "300W":
         original_vqvae_model = VQVAE(
             h_dim=128,
@@ -131,7 +138,9 @@ def main_function():
             beta=0.25,
             save_img_embedding_map=False,
         )
-        original_vqvae_model.load_weights("weights/VQVAE/300W/best_model.pt")
+        original_vqvae_model.load_weights(
+            args.vqvae_weights or "weights/VQVAE/300W/best_model.pt"
+        )
         vit_model = ORFormer(
             image_size=16,
             patch_size=1,
@@ -154,7 +163,7 @@ def main_function():
             save_img_embedding_map=False,
             vit=vit_model,
         )
-        model.load_weights("weights/VQVAE/300W/best_model.pt")
+        model.load_weights(args.vqvae_weights or "weights/VQVAE/300W/best_model.pt")
     if args.dataset == "COFW":
         original_vqvae_model = VQVAE(
             h_dim=128,
@@ -167,7 +176,9 @@ def main_function():
             beta=0.25,
             save_img_embedding_map=False,
         )
-        original_vqvae_model.load_weights("weights/VQVAE/COFW/best_model.pt")
+        original_vqvae_model.load_weights(
+            args.vqvae_weights or "weights/VQVAE/COFW/best_model.pt"
+        )
         vit_model = ORFormer(
             image_size=16,
             patch_size=1,
@@ -190,7 +201,7 @@ def main_function():
             save_img_embedding_map=False,
             vit=vit_model,
         )
-        model.load_weights("weights/VQVAE/COFW/best_model.pt")
+        model.load_weights(args.vqvae_weights or "weights/VQVAE/COFW/best_model.pt")
 
     original_vqvae_model = original_vqvae_model.to(device)
     original_vqvae_model.eval()

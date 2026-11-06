@@ -20,6 +20,9 @@ os.chdir(sys.path[0])
 def parse_args():
     parser = argparse.ArgumentParser(description="Train Sparse Facial Network")
     parser.add_argument("--dataset", help="dataset", type=str, default="WFLW")
+    parser.add_argument(
+        "--weights", help="checkpoint (default: released weights)", type=str
+    )
     args = parser.parse_args()
 
     return args
@@ -76,7 +79,7 @@ def main_function():
             beta=0.25,
             save_img_embedding_map=False,
         )
-        vqvae.load_weights("weights/VQVAE/WFLW/best_model.pt")
+        vqvae.load_weights(args.weights or "weights/VQVAE/WFLW/best_model.pt")
         vqvae = vqvae.to(device)
     if args.dataset == "300W":
         vqvae = VQVAE(
@@ -90,7 +93,7 @@ def main_function():
             beta=0.25,
             save_img_embedding_map=False,
         )
-        vqvae.load_weights("weights/VQVAE/300W/best_model.pt")
+        vqvae.load_weights(args.weights or "weights/VQVAE/300W/best_model.pt")
         vqvae = vqvae.to(device)
     if args.dataset == "COFW":
         vqvae = VQVAE(
@@ -104,7 +107,7 @@ def main_function():
             beta=0.25,
             save_img_embedding_map=False,
         )
-        vqvae.load_weights("weights/VQVAE/COFW/best_model.pt")
+        vqvae.load_weights(args.weights or "weights/VQVAE/COFW/best_model.pt")
         vqvae = vqvae.to(device)
 
     normalize_transform = transforms.Compose(
