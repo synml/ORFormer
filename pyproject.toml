@@ -4,7 +4,7 @@ name = "orformer"
 version = "1.0.0"
 description = "ORFormer: Occlusion-Robust Transformer for Accurate Facial Landmark Detection"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 authors = [{ name = "Seokyong Shin", email = "kistssy@gmail.com" }]
 
 # Required dependencies ---------------------------------------------------------------
@@ -35,6 +35,9 @@ dev = [
 Repository = "https://github.com/synml/ORFormer"
 
 # Tools settings ----------------------------------------------------------------------
+[tool.uv]
+python-preference = "only-managed"
+
 [tool.uv.sources]
 torch = { index = "pytorch-cu132" }
 torchvision = { index = "pytorch-cu132" }
@@ -46,7 +49,7 @@ explicit = true
 
 [tool.pyright]
 typeCheckingMode = "standard"
-pythonVersion = "3.13"
+pythonVersion = "3.14"
 venvPath = "."
 venv = ".venv"
 exclude = ["Dataset", "weights", "**/__pycache__", "**/.*"]
