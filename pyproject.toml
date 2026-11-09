@@ -39,12 +39,12 @@ Repository = "https://github.com/synml/ORFormer"
 python-preference = "only-managed"
 
 [tool.uv.sources]
-torch = { index = "pytorch-cu132" }
-torchvision = { index = "pytorch-cu132" }
+torch = { index = "pytorch-cu134" }
+torchvision = { index = "pytorch-cu134" }
 
 [[tool.uv.index]]
-name = "pytorch-cu132"
-url = "https://download.pytorch.org/whl/cu132"
+name = "pytorch-cu134"
+url = "https://download.pytorch.org/whl/cu134"
 explicit = true
 
 [tool.pyright]
